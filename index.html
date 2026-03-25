@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tennis Ball Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --court: #2d5016;
+    --clay: #c8572b;
+    --ball: #ccff00;
+    --ball-dark: #9acc00;
+    --white: #f5f5f0;
+    --dark: #0f0f0f;
+    --mid: #1e2a14;
+    --card-bg: #1a2510;
+    --border: rgba(204,255,0,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background court lines */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(204,255,0,0.03) 79px, rgba(204,255,0,0.03) 80px),
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(204,255,0,0.03) 79px, rgba(204,255,0,0.03) 80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-ball {
+    width: 44px;
+    height: 44px;
+    background: var(--ball);
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 20px rgba(204,255,0,0.4);
+    flex-shrink: 0;
+  }
+  .logo-ball::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    right: 6px;
+    height: 2px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 2px;
+    transform: translateY(-50%);
+    box-shadow: 0 -5px 0 rgba(0,0,0,0.12), 0 5px 0 rgba(0,0,0,0.12);
+  }
+
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--white);
+    line-height: 1;
+  }
+  .logo-text span { color: var(--ball); }
+
+  .stats-header {
+    display: flex;
+    gap: 32px;
+    font-size: 13px;
+    color: rgba(245,245,240,0.5);
+  }
+  .stats-header strong {
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--ball);
+    letter-spacing: 1px;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 60px 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 7vw, 88px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+  }
+  .hero-title .accent { color: var(--ball); }
+  .hero-title .outline {
+    -webkit-text-stroke: 1px rgba(245,245,240,0.3);
+    color: transparent;
+  }
+
+  .hero-sub {
+    margin-top: 20px;
+    color: rgba(245,245,240,0.55);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 360px;
+  }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed rgba(204,255,0,0.3);
+    border-radius: 16px;
+    background: rgba(204,255,0,0.03);
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--ball);
+    background: rgba(204,255,0,0.07);
+    box-shadow: 0 0 40px rgba(204,255,0,0.1);
+  }
+
+  .upload-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--ball);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 30px rgba(204,255,0,0.3);
+    transition: transform 0.3s ease;
+  }
+  .upload-zone:hover .upload-icon {
+    transform: scale(1.08) rotate(-5deg);
+  }
+
+  .upload-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .upload-hint {
+    font-size: 13px;
+    color: rgba(245,245,240,0.4);
+    margin-bottom: 24px;
+  }
+  .upload-hint span { color: var(--ball); }
+
+  .btn-upload {
+    background: var(--ball);
+    color: var(--dark);
+    border: none;
+    padding: 12px 32px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-upload:hover {
+    background: var(--ball-dark);
+    transform: translateY(-1px);
+  }
+
+  #fileInput { display: none; }
+
+  /* FILTERS */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-top: 48px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+  }
+  .section-title span { color: var(--ball); }
+
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+  }
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: rgba(245,245,240,0.5);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-tab.active, .filter-tab:hover {
+    background: var(--ball);
+    color: var(--dark);
+    border-color: var(--ball);
+  }
+
+  /* GALLERY */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    padding-bottom: 80px;
+  }
+
+  .ball-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  .ball-card:hover {
+    border-color: rgba(204,255,0,0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(204,255,0,0.1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    background: var(--mid);
+  }
+
+  .card-img-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    background: linear-gradient(135deg, var(--mid), var(--card-bg));
+  }
+
+  .card-body {
+    padding: 14px 16px 16px;
+  }
+
+  .card-name {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-date {
+    font-size: 11px;
+    color: rgba(245,245,240,0.35);
+  }
+
+  .card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(204,255,0,0.12);
+    color: var(--ball);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card-badge.used { background: rgba(200,87,43,0.15); color: var(--clay); }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .btn-sm {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { border-color: var(--ball); color: var(--ball); }
+  .btn-sm.danger:hover { border-color: #ff4444; color: #ff4444; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 0;
+    color: rgba(245,245,240,0.3);
+  }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state p { font-size: 14px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 480px;
+    width: 100%;
+    padding: 32px;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal-img {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    object-fit: cover;
+    max-height: 280px;
+  }
+  .modal-placeholder {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    background: var(--mid);
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .modal-detail {
+    font-size: 13px;
+    color: rgba(245,245,240,0.5);
+    margin-bottom: 4px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .btn-modal {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    transition: all 0.15s;
+  }
+  .btn-modal.primary {
+    background: var(--ball);
+    color: var(--dark);
+    border-color: var(--ball);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    font-size: 16px;
+  }
+  .btn-modal.primary:hover { background: var(--ball-dark); }
+  .btn-modal:hover { border-color: rgba(245,245,240,0.4); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ball);
+    color: var(--dark);
+    padding: 10px 24px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Upload form in modal */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; color: rgba(245,245,240,0.5); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input, .form-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--ball); }
+  .form-select option { background: var(--dark); }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 16px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-bar.visible { display: block; }
+  .progress-fill {
+    height: 100%;
+    background: var(--ball);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  @media (max-width: 640px) {
+    .hero { grid-template-columns: 1fr; }
+    .stats-header { display: none; }
+    .hero-title { font-size: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-ball"></div>
+      <div>
+        <div class="logo-text">BALL<span>VAULT</span></div>
+      </div>
+    </div>
+    <div class="stats-header">
+      <div><strong id="totalCount">0</strong>balles total</div>
+      <div><strong id="newCount">0</strong>neuves</div>
+      <div><strong id="usedCount">0</strong>usagées</div>
+    </div>
+  </header>
+
+  <!-- HERO + UPLOAD -->
+  <div class="hero">
+    <div>
+      <h1 class="hero-title">
+        <span class="outline">MES</span><br>
+        BALLES<br>
+        <span class="accent">DE TENNIS</span>
+      </h1>
+      <p class="hero-sub">Gérez votre collection de balles — neuves, en vol ou usagées. Chargez vos photos et gardez un œil sur votre stock.</p>
+    </div>
+
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">🎾</div>
+      <div class="upload-title">Déposer une balle</div>
+      <div class="upload-hint">Glissez une photo ici ou <span>parcourez</span></div>
+      <button class="btn-upload" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Choisir une image</button>
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="section-header">
+    <h2 class="section-title">MA <span>COLLECTION</span></h2>
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterGallery('all', this)">Tout</button>
+      <button class="filter-tab" onclick="filterGallery('new', this)">Neuves</button>
+      <button class="filter-tab" onclick="filterGallery('flight', this)">En vol</button>
+      <button class="filter-tab" onclick="filterGallery('used', this)">Usagées</button>
+    </div>
+  </div>
+
+  <div class="gallery" id="gallery">
+    <div class="empty-state">
+      <div class="empty-state-icon">🎾</div>
+      <p>Aucune balle pour l'instant.<br>Chargez votre première photo !</p>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <div id="previewContainer"></div>
+    <div class="modal-title">Nouvelle Balle</div>
+    <div class="form-group">
+      <label class="form-label">Nom / Description</label>
+      <input class="form-input" id="ballName" type="text" placeholder="Ex: Wilson Pro Staff, Roland Garros…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">État</label>
+      <select class="form-select" id="ballState">
+        <option value="new">🟢 Neuve</option>
+        <option value="flight">🟡 En vol</option>
+        <option value="used">🔴 Usagée</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note</label>
+      <input class="form-input" id="ballNote" type="text" placeholder="Optionnel…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeUploadModal()">Annuler</button>
+      <button class="btn-modal primary" onclick="confirmUpload()">Ajouter à la collection</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div id="viewImgContainer"></div>
+    <div class="modal-title" id="viewTitle"></div>
+    <div class="modal-detail" id="viewState"></div>
+    <div class="modal-detail" id="viewDate"></div>
+    <div class="modal-detail" id="viewNote"></div>
+    <div class="modal-actions">
+      <button class="btn-modal danger" id="deleteBtn">Supprimer</button>
+      <button class="btn-modal primary" onclick="closeViewModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let balls = [];
+  let pendingFiles = [];
+  let currentFilter = 'all';
+  let currentViewId = null;
+
+  // ── IndexedDB ────────────────────────────────────────────────────
+  let db;
+  const DB_NAME = 'BallVaultDB', DB_VERSION = 1, STORE = 'balls';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e => e.target.result.createObjectStore(STORE, { keyPath: 'id' });
+      req.onsuccess = e => { db = e.target.result; resolve(db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function dbPut(ball) {
+    return new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(ball);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  }
+  function dbRemove(id) {
+    return new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  }
+  function dbLoadAll() {
+    return new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  }
+
+  // Boot
+  openDB().then(async () => {
+    balls = await dbLoadAll();
+    balls.sort((a, b) => b.id - a.id);
+    render();
+  }).catch(() => { render(); });
+
+  const gallery = document.getElementById('gallery');
+  const fileInput = document.getElementById('fileInput');
+  const dropZone = document.getElementById('dropZone');
+
+  // DRAG & DROP
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+  function handleFiles(files) {
+    if (!files.length) return;
+    pendingFiles = Array.from(files);
+    openUploadModal(pendingFiles[0]);
+  }
+
+  // UPLOAD MODAL
+  function openUploadModal(file) {
+    const modal = document.getElementById('uploadModal');
+    const container = document.getElementById('previewContainer');
+    document.getElementById('ballName').value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g,' ');
+    document.getElementById('ballNote').value = '';
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        container.innerHTML = `<img src="${e.target.result}" class="modal-img" style="max-height:200px">`;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      container.innerHTML = `<div class="modal-placeholder">🎾</div>`;
+    }
+    modal.classList.add('open');
+  }
+
+  function closeUploadModal() {
+    document.getElementById('uploadModal').classList.remove('open');
+    pendingFiles = [];
+    fileInput.value = '';
+  }
+
+  function confirmUpload() {
+    const name = document.getElementById('ballName').value || 'Balle sans nom';
+    const state = document.getElementById('ballState').value;
+    const note = document.getElementById('ballNote').value;
+    const file = pendingFiles[0];
+
+    if (!file) return;
+
+    // Simulate progress
+    const pb = document.getElementById('progressBar');
+    const pf = document.getElementById('progressFill');
+    pb.classList.add('visible');
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 25;
+      pf.style.width = Math.min(p, 95) + '%';
+    }, 80);
+
+    const reader = new FileReader();
+    reader.onload = async e => {
+      clearInterval(interval);
+      pf.style.width = '100%';
+      const ball = {
+        id: Date.now(),
+        name, state, note,
+        date: new Date().toLocaleDateString('fr-FR'),
+        src: e.target.result
+      };
+      await dbPut(ball);
+      balls.unshift(ball);
+      render();
+      setTimeout(() => {
+        closeUploadModal();
+        pb.classList.remove('visible');
+        pf.style.width = '0%';
+        showToast('🎾 Balle ajoutée !');
+      }, 300);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // VIEW MODAL
+  function openViewModal(id) {
+    const ball = balls.find(b => b.id === id);
+    if (!ball) return;
+    currentViewId = id;
+    const modal = document.getElementById('viewModal');
+    const stateLabels = { new: '🟢 Neuve', flight: '🟡 En vol', used: '🔴 Usagée' };
+
+    document.getElementById('viewImgContainer').innerHTML = ball.src
+      ? `<img src="${ball.src}" class="modal-img">`
+      : `<div class="modal-placeholder">🎾</div>`;
+    document.getElementById('viewTitle').textContent = ball.name;
+    document.getElementById('viewState').textContent = 'État : ' + stateLabels[ball.state];
+    document.getElementById('viewDate').textContent = 'Ajoutée le : ' + ball.date;
+    document.getElementById('viewNote').textContent = ball.note ? '📝 ' + ball.note : '';
+    document.getElementById('deleteBtn').onclick = () => deleteBall(id);
+    modal.classList.add('open');
+  }
+
+  function closeViewModal() {
+    document.getElementById('viewModal').classList.remove('open');
+    currentViewId = null;
+  }
+
+  async function deleteBall(id) {
+    await dbRemove(id);
+    balls = balls.filter(b => b.id !== id);
+    render();
+    closeViewModal();
+    showToast('Balle supprimée');
+  }
+
+  // FILTER
+  function filterGallery(type, el) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    render();
+  }
+
+  // RENDER
+  function render() {
+    const filtered = currentFilter === 'all' ? balls : balls.filter(b => b.state === currentFilter);
+    const stateLabels = { new: 'Neuve', flight: 'En vol', used: 'Usagée' };
+
+    updateStats();
+
+    if (!filtered.length) {
+      gallery.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎾</div><p>Aucune balle ici.<br>Chargez votre première photo !</p></div>`;
+      return;
+    }
+
+    gallery.innerHTML = filtered.map((b, i) => `
+      <div class="ball-card" style="animation-delay:${i*0.05}s" onclick="openViewModal(${b.id})">
+        ${b.src
+          ? `<img src="${b.src}" class="card-img" alt="${b.name}">`
+          : `<div class="card-img-placeholder">🎾</div>`}
+        <div class="card-body">
+          <div class="card-name">${b.name}</div>
+          <div class="card-meta">
+            <span class="card-date">${b.date}</span>
+            <span class="card-badge ${b.state === 'used' ? 'used' : ''}">${stateLabels[b.state]}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('totalCount').textContent = balls.length;
+    document.getElementById('newCount').textContent = balls.filter(b => b.state === 'new').length;
+    document.getElementById('usedCount').textContent = balls.filter(b => b.state === 'used').length;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Close modals on overlay click
+  document.getElementById('uploadModal').addEventListener('click', function(e) {
+    if (e.target === this) closeUploadModal();
+  });
+  document.getElementById('viewModal').addEventListener('click', function(e) {
+    if (e.target === this) closeViewModal();
+  });
+</script>
+</body>
+</html>
